@@ -14,13 +14,12 @@ def h_zero(state):
 
 
 def h_inadmissivel(state):
-    """Heurística NÃO admissível — peças fora do lugar × 3.
+    """Heurística NÃO admissível — peças fora + Manhattan.
 
-    Multiplica por 3 faz a estimativa superar o custo real, violando
-    a condição de admissibilidade. O A* pode encontrar caminhos
-    sub-ótimos, mas geralmente expande muito menos nodos.
+    Soma duas estimativas admissíveis para forçar superestimação em
+    diversos estados. Serve para comparar desempenho vs. qualidade.
     """
-    return sum(3 for i, t in enumerate(state) if t != 0 and t != GOAL[i])
+    return h_pecas_fora(state) + h_manhattan(state)
 
 
 def h_pecas_fora(state):
@@ -51,7 +50,7 @@ def h_manhattan(state):
 
 ALGORITHMS = {
     1: ("Custo Uniforme",           h_zero),
-    2: ("A* Inadmissível (×3)",     h_inadmissivel),
-    3: ("A* Peças Fora do Lugar",   h_pecas_fora),
-    4: ("A* Manhattan",             h_manhattan),
+    2: ("A* Peças Fora do Lugar",   h_pecas_fora),
+    3: ("A* Manhattan",             h_manhattan),
+    4: ("A* Não Admissível (Soma)", h_inadmissivel),
 }

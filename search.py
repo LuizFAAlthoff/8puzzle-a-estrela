@@ -1,5 +1,5 @@
-import heapq
 import time
+from bisect import insort
 
 from puzzle import GOAL, get_neighbors
 
@@ -18,13 +18,13 @@ def _reconstruct_path(parent, goal):
 def a_star(start, heuristic, max_nodes=500_000):
     """Busca A* (ou Custo Uniforme quando heuristic retorna 0).
 
-    Estrutura da fronteira
-    ----------------------
-    Heap de mínimo com entradas (f, g, counter, state), onde:
-      f       = g + h  →  custo estimado total
-      g       = custo real acumulado do início até state
-      counter = desempata entradas com mesmo f sem comparar tuplas de estado
-      state   = tupla representando o tabuleiro
+        Estrutura da fronteira
+        ----------------------
+        Lista ordenada com entradas (f, g, counter, state), onde:
+            f       = g + h  →  custo estimado total
+            g       = custo real acumulado do início até state
+            counter = desempata entradas com mesmo f sem comparar tuplas de estado
+            state   = tupla representando o tabuleiro
 
     Verificações antes de adicionar um vizinho à fronteira
     ------------------------------------------------------
@@ -45,7 +45,7 @@ def a_star(start, heuristic, max_nodes=500_000):
     Dicionário com os resultados ou None se não houver solução.
     """
     counter = 0
-    heap = [(heuristic(start), 0, counter, start)]
+    frontier = [(heuristic(start), 0, counter, start)]
 
     closed = set()
     g_costs = {start: 0}
@@ -55,9 +55,11 @@ def a_star(start, heuristic, max_nodes=500_000):
     visited_count = 0
     start_time = time.time()
 
-    while heap:
-        max_frontier_size = max(max_frontier_size, len(heap))
-        f, g, _, state = heapq.heappop(heap)
+    while True:
+        if not frontier:
+            return None
+
+        f, g, _, state = frontier.pop(0)
 
         if state in closed:
             continue
@@ -75,7 +77,7 @@ def a_star(start, heuristic, max_nodes=500_000):
                 "visited_count":     visited_count,
                 "time_seconds":      round(elapsed, 6),
                 "max_frontier_size": max_frontier_size,
-                "frontier_at_end":   [list(item[3]) for item in heap],
+                "frontier_at_end":   [list(item[3]) for item in frontier],
                 "visited_at_end":    [list(s) for s in closed],
             }
 
@@ -88,9 +90,5 @@ def a_star(start, heuristic, max_nodes=500_000):
                 g_costs[neighbor] = new_g
                 parent[neighbor] = (state, move)
                 counter += 1
-                heapq.heappush(
-                    heap,
-                    (new_g + heuristic(neighbor), new_g, counter, neighbor),
-                )
-
-    return None
+                insort(frontier, (new_g + heuristic(neighbor), new_g, counter, neighbor))
+                max_frontier_size = max(max_frontier_size, len(frontier))

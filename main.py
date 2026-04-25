@@ -14,14 +14,16 @@ Uso
 Algoritmos disponíveis
 ----------------------
   1 — Custo Uniforme (sem heurística)
-  2 — A* com heurística não admissível (peças fora × 3)
-  3 — A* com heurística admissível simples (peças fora do lugar)
-  4 — A* com heurística admissível precisa (distância Manhattan)
+    2 — A* com heurística admissível simples (peças fora do lugar)
+    3 — A* com heurística admissível precisa (distância Manhattan)
+    4 — A* com heurística não admissível (peças fora + Manhattan)
 """
 
 import json
 import os
+import re
 import sys
+import unicodedata
 
 from heuristics import ALGORITHMS
 from puzzle import is_solvable, print_board
@@ -40,7 +42,12 @@ PREDEFINED_CASES = {
 def save_output(case_name, alg_id, result):
     """Salva fronteira e visitados em arquivo JSON na pasta output/."""
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    alg_slug = ALGORITHMS[alg_id][0].lower().replace(" ", "_").replace("(", "").replace(")", "").replace("×", "x")
+
+    # Normaliza e remove caracteres inválidos para nomes de arquivo no Windows.
+    alg_name = ALGORITHMS[alg_id][0].lower().replace("×", "x")
+    alg_name = unicodedata.normalize("NFKD", alg_name).encode("ascii", "ignore").decode("ascii")
+    alg_slug = re.sub(r"[^a-z0-9]+", "_", alg_name).strip("_")
+
     filename = os.path.join(OUTPUT_DIR, f"{case_name}_{alg_id}_{alg_slug}.json")
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(
