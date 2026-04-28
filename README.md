@@ -105,4 +105,4 @@ somente uma.
 
 ---
 
-!(.\fluxograma_8puzzle.png)
+![Fluxograma do 8-puzzle](fluxograma_8puzzle.png)
