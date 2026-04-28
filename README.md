@@ -102,3 +102,7 @@ uma solução</u> <u>possível:</u>
 Caso alguém queira implementar com **qualquer** solução também pode, mas
 nesse caso deve-se considerar **todas** as possíveis soluções, e não
 somente uma.
+
+---
+
+!(.\fluxograma_8puzzle.png)
