@@ -8,7 +8,7 @@ Uso
   # Roda apenas um algoritmo específico (1-4):
   python main.py "7 2 4 5 0 6 8 3 1" 4
 
-  # Roda os casos de teste predefinidos (fácil, médio, difícil):
+    # Roda um caso aleatório solucionável:
   python main.py
 
 Algoritmos disponíveis
@@ -21,6 +21,7 @@ Algoritmos disponíveis
 
 import json
 import os
+import random
 import re
 import sys
 import unicodedata
@@ -31,12 +32,15 @@ from search import a_star
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 
-# Casos predefinidos para comparativo
-PREDEFINED_CASES = {
-    "facil":   (1, 2, 3, 4, 5, 6, 7, 0, 8),  # 1 movimento
-    "medio":   (4, 1, 0, 2, 5, 3, 7, 8, 6),  # 8 movimentos
-    "dificil": (7, 2, 4, 5, 0, 6, 8, 3, 1),  # 20 movimentos
-}
+
+def generate_random_start():
+    """Gera um estado inicial aleatório e solucionável do 8-puzzle."""
+    while True:
+        state = list(range(9))
+        random.shuffle(state)
+        start = tuple(state)
+        if start != (1, 2, 3, 4, 5, 6, 7, 8, 0) and is_solvable(start):
+            return start
 
 
 def save_output(case_name, alg_id, result):
@@ -128,7 +132,7 @@ def run_case(start, case_name, alg_ids):
 def parse_args():
     """Interpreta os argumentos da linha de comando.
 
-    Retorna (start, alg_ids, case_name) ou usa casos predefinidos.
+    Retorna (start, alg_ids, case_name) ou usa o estado informado.
     """
     args = sys.argv[1:]
 
@@ -164,8 +168,8 @@ if __name__ == "__main__":
     parsed = parse_args()
 
     if parsed is None:
-        for case_name, state in PREDEFINED_CASES.items():
-            run_case(state, case_name, list(ALGORITHMS.keys()))
+        start = generate_random_start()
+        run_case(start, "aleatorio", list(ALGORITHMS.keys()))
     else:
         start, alg_ids, case_name = parsed
         run_case(start, case_name, alg_ids)
