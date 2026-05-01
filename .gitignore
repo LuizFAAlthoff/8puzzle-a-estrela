@@ -1,10 +1,3 @@
-.\output\aleatorio_1_custo_uniforme.json
-.\output\aleatorio_2_a_pecas_fora_do_lugar.json
-.\output\aleatorio_3_a_manhattan.json
-.\output\aleatorio_4_a_nao_admissivel_soma.json
-.\__pycache__\heuristics.cpython-313.pyc
-.\__pycache__\heuristics.cpython-314.pyc
-.\__pycache__\puzzle.cpython-313.pyc
-.\__pycache__\puzzle.cpython-314.pyc
-.\__pycache__\search.cpython-313.pyc
-.\__pycache__\search.cpython-314.pyc
+__pycache__/
+*.pyc
+output/
