@@ -1,109 +1,96 @@
 import time
 
-from puzzle import GOAL, get_neighbors
+from puzzle import ESTADO_OBJETIVO, obter_vizinhos
 
 
-def _reconstruct_path(parent, goal):
-    path = []
-    cur = goal
-    while parent[cur] is not None:
-        par, move = parent[cur]
-        path.append(move)
-        cur = par
-    path.reverse()
-    return path
+def reconstruir_caminho(predecessores, estado_objetivo):
+    caminho = []
+    atual = estado_objetivo
+    while predecessores[atual] is not None:
+        estado_anterior, movimento = predecessores[atual]
+        caminho.append(movimento)
+        atual = estado_anterior
+    caminho.reverse()
+    return caminho
 
 
-def _insert_sorted(frontier, item):
-    """Insere item mantendo a lista frontier ordenada pelo f-value (primeiro elemento).
-    
-    Usa busca binária para encontrar a posição correta e insere o elemento,
-    mantendo a ordem de prioridade da fila.
-    """
-    left, right = 0, len(frontier)
-    while left < right:
-        mid = (left + right) // 2
-        if frontier[mid] < item:
-            left = mid + 1
+def inserir_ordenado(fronteira, item):
+    """Insere item mantendo a lista fronteira ordenada pelo custo estimado total."""
+    esquerda, direita = 0, len(fronteira)
+    while esquerda < direita:
+        meio = (esquerda + direita) // 2
+        if fronteira[meio] < item:
+            esquerda = meio + 1
         else:
-            right = mid
-    frontier.insert(left, item)
+            direita = meio
+    fronteira.insert(esquerda, item)
 
 
-def a_star(start, heuristic, max_nodes=500_000):
-    """Busca A* (ou Custo Uniforme quando heuristic retorna 0).
+def busca_a_estrela(estado_inicial, heuristica, max_nodos=500_000):
+    """Busca A* (ou Custo Uniforme quando heuristica retorna 0).
 
-        Estrutura da fronteira
-        ----------------------
-        Lista ordenada com entradas (f, g, counter, state), onde:
-            f       = g + h  →  custo estimado total
-            g       = custo real acumulado do início até state
-            counter = desempata entradas com mesmo f sem comparar tuplas de estado
-            state   = tupla representando o tabuleiro
+    Estrutura da fronteira
+    ----------------------
+    Lista ordenada com entradas (f, g, contador, estado), onde:
+        f        = g + h  -> custo estimado total
+        g        = custo real acumulado do início até o estado
+        contador = desempata entradas com mesmo f sem comparar tuplas de estado
+        estado   = tupla representando o tabuleiro
 
     Verificações antes de adicionar um vizinho à fronteira
     ------------------------------------------------------
-    1. Se o vizinho já está no conjunto fechado (closed) → descarta.
-       Nodos no fechado já foram expandidos com custo ótimo.
-    2. Se já existe um g registrado para o vizinho com custo menor
-       ou igual ao novo g → descarta. Já há um caminho mais barato
-       conhecido (ou igual) para esse estado na fronteira.
+    1. Se o vizinho já está no conjunto fechado (fechados) -> descarta.
+    2. Se já existe um g registrado para o vizinho com custo menor ou igual
+       ao novo g -> descarta.
 
-    Parâmetros
-    ----------
-    start       : tupla com o estado inicial (9 inteiros)
-    heuristic   : função h(state) -> int
-    max_nodes   : limite de segurança para evitar loop infinito
-
-    Retorno
-    -------
-    Dicionário com os resultados ou None se não houver solução.
+    Retorna um dicionário com os resultados ou None se não houver solução.
     """
-    counter = 0
-    frontier = [(heuristic(start), 0, counter, start)]
+    contador = 0
+    fronteira = [(heuristica(estado_inicial), 0, contador, estado_inicial)]
 
-    closed = set()
-    g_costs = {start: 0}
-    parent = {start: None}  # state -> (parent_state, move) | None
+    fechados = set()
+    custos_g = {estado_inicial: 0}
+    predecessores = {estado_inicial: None}
 
-    max_frontier_size = 1
-    visited_count = 0
-    start_time = time.time()
+    maior_tamanho_fronteira = 1
+    quantidade_visitados = 0
+    tempo_inicial = time.time()
 
     while True:
-        if not frontier:
+        if not fronteira:
             return None
 
-        f, g, _, state = frontier.pop(0)
+        custo_estimado_total, custo_acumulado, _, estado_atual = fronteira.pop(0)
 
-        if state in closed:
+        if estado_atual in fechados:
             continue
 
-        closed.add(state)
-        visited_count += 1
+        fechados.add(estado_atual)
+        quantidade_visitados += 1
 
-        if visited_count > max_nodes:
+        if quantidade_visitados > max_nodos:
             return None
 
-        if state == GOAL:
-            elapsed = time.time() - start_time
+        if estado_atual == ESTADO_OBJETIVO:
+            tempo_decorrido = time.time() - tempo_inicial
             return {
-                "path":              _reconstruct_path(parent, GOAL),
-                "visited_count":     visited_count,
-                "time_seconds":      round(elapsed, 6),
-                "max_frontier_size": max_frontier_size,
-                "frontier_at_end":   [list(item[3]) for item in frontier],
-                "visited_at_end":    [list(s) for s in closed],
+                "caminho": reconstruir_caminho(predecessores, ESTADO_OBJETIVO),
+                "quantidade_visitados": quantidade_visitados,
+                "tempo_em_segundos": round(tempo_decorrido, 6),
+                "maior_tamanho_fronteira": maior_tamanho_fronteira,
+                "fronteira_final": [list(item[3]) for item in fronteira],
+                "visitados_finais": [list(estado) for estado in fechados],
             }
 
-        for neighbor, move in get_neighbors(state):
-            if neighbor in closed:
+        for vizinho, movimento in obter_vizinhos(estado_atual):
+            if vizinho in fechados:
                 continue
-            new_g = g + 1
-            # Só enfileira se encontrou caminho mais barato (ou inédito)
-            if neighbor not in g_costs or g_costs[neighbor] > new_g:
-                g_costs[neighbor] = new_g
-                parent[neighbor] = (state, move)
-                counter += 1
-                _insert_sorted(frontier, (new_g + heuristic(neighbor), new_g, counter, neighbor))
-                max_frontier_size = max(max_frontier_size, len(frontier))
+
+            novo_custo_g = custo_acumulado + 1
+
+            if vizinho not in custos_g or custos_g[vizinho] > novo_custo_g:
+                custos_g[vizinho] = novo_custo_g
+                predecessores[vizinho] = (estado_atual, movimento)
+                contador += 1
+                inserir_ordenado(fronteira, (novo_custo_g + heuristica(vizinho), novo_custo_g, contador, vizinho))
+                maior_tamanho_fronteira = max(maior_tamanho_fronteira, len(fronteira))

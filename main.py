@@ -26,168 +26,168 @@ import re
 import sys
 import unicodedata
 
-from heuristics import ALGORITHMS
-from puzzle import is_solvable, print_board
-from search import a_star
+from heuristics import ALGORITMOS
+from puzzle import e_resolvivel, imprimir_tabuleiro
+from search import busca_a_estrela
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
-GOAL_STATE = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+PASTA_SAIDA = os.path.join(os.path.dirname(__file__), "output")
+ESTADO_OBJETIVO = (1, 2, 3, 4, 5, 6, 7, 8, 0)
 
 
-def apply_moves(start, moves):
+def aplicar_movimentos(estado_inicial, movimentos):
     """Aplica uma sequência de movimentos ao tabuleiro informado."""
-    state = list(start)
-    for move in moves:
-        blank_index = state.index(0)
-        row, col = divmod(blank_index, 3)
+    estado = list(estado_inicial)
+    for movimento in movimentos:
+        indice_do_espaco = estado.index(0)
+        linha, coluna = divmod(indice_do_espaco, 3)
 
-        if move == "left" and col > 0:
-            swap_index = blank_index - 1
-        elif move == "right" and col < 2:
-            swap_index = blank_index + 1
-        elif move == "up" and row > 0:
-            swap_index = blank_index - 3
-        elif move == "down" and row < 2:
-            swap_index = blank_index + 3
+        if movimento == "left" and coluna > 0:
+            indice_troca = indice_do_espaco - 1
+        elif movimento == "right" and coluna < 2:
+            indice_troca = indice_do_espaco + 1
+        elif movimento == "up" and linha > 0:
+            indice_troca = indice_do_espaco - 3
+        elif movimento == "down" and linha < 2:
+            indice_troca = indice_do_espaco + 3
         else:
-            raise ValueError(f"Movimento inválido '{move}' para o estado {tuple(state)}")
+            raise ValueError(f"Movimento inválido '{movimento}' para o estado {tuple(estado)}")
 
-        state[blank_index], state[swap_index] = state[swap_index], state[blank_index]
+        estado[indice_do_espaco], estado[indice_troca] = estado[indice_troca], estado[indice_do_espaco]
 
-    return tuple(state)
+    return tuple(estado)
 
 
-def generate_scrambled_start(moves):
+def gerar_estado_embaralhado(movimentos):
     """Gera um estado solucionável a partir do estado objetivo."""
-    return apply_moves(GOAL_STATE, moves)
+    return aplicar_movimentos(ESTADO_OBJETIVO, movimentos)
 
 
-def get_default_cases():
+def obter_casos_padrao():
     """Retorna os 7 casos padrão usados quando o programa é executado sem argumentos.
 
     A dificuldade é aproximada pela profundidade do embaralhamento a partir do estado objetivo.
     """
     return [
-        ("facil_1", generate_scrambled_start(["left", "up", "left"])),
-        ("facil_2", generate_scrambled_start(["up", "left", "down", "right"])),
-        ("medio_1", generate_scrambled_start(["left", "up", "left", "down", "right", "up"])),
-        ("medio_2", generate_scrambled_start(["up", "left", "down", "left", "up", "right"])),
-        ("dificil_1", generate_scrambled_start(["left", "up", "left", "down", "right", "up", "left", "down", "right", "up"])),
-        ("dificil_2", generate_scrambled_start(["up", "left", "down", "left", "up", "right", "down", "left", "up", "right", "down", "left"])),
-        ("aleatorio", generate_random_start()),
+        ("facil_1", gerar_estado_embaralhado(["left", "up", "left"])),
+        ("facil_2", gerar_estado_embaralhado(["up", "left", "down", "right"])),
+        ("medio_1", gerar_estado_embaralhado(["left", "up", "left", "down", "right", "up"])),
+        ("medio_2", gerar_estado_embaralhado(["up", "left", "down", "left", "up", "right"])),
+        ("dificil_1", gerar_estado_embaralhado(["left", "up", "left", "down", "right", "up", "left", "down", "right", "up"])),
+        ("dificil_2", gerar_estado_embaralhado(["up", "left", "down", "left", "up", "right", "down", "left", "up", "right", "down", "left"])),
+        ("aleatorio", gerar_estado_aleatorio()),
     ]
 
 
-def generate_random_start():
+def gerar_estado_aleatorio():
     """Gera um estado inicial aleatório e solucionável do 8-puzzle."""
     while True:
-        state = list(range(9))
-        random.shuffle(state)
-        start = tuple(state)
-        if start != (1, 2, 3, 4, 5, 6, 7, 8, 0) and is_solvable(start):
-            return start
+        estado = list(range(9))
+        random.shuffle(estado)
+        estado_inicial = tuple(estado)
+        if estado_inicial != ESTADO_OBJETIVO and e_resolvivel(estado_inicial):
+            return estado_inicial
 
 
-def save_output(case_name, alg_id, result):
+def salvar_saida(nome_caso, identificador_algoritmo, resultado):
     """Salva fronteira e visitados em arquivo JSON na pasta output/."""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(PASTA_SAIDA, exist_ok=True)
 
     # Normaliza e remove caracteres inválidos para nomes de arquivo no Windows.
-    alg_name = ALGORITHMS[alg_id][0].lower().replace("×", "x")
-    alg_name = unicodedata.normalize("NFKD", alg_name).encode("ascii", "ignore").decode("ascii")
-    alg_slug = re.sub(r"[^a-z0-9]+", "_", alg_name).strip("_")
+    nome_algoritmo = ALGORITMOS[identificador_algoritmo][0].lower().replace("×", "x")
+    nome_algoritmo = unicodedata.normalize("NFKD", nome_algoritmo).encode("ascii", "ignore").decode("ascii")
+    identificador_amigavel = re.sub(r"[^a-z0-9]+", "_", nome_algoritmo).strip("_")
 
-    filename = os.path.join(OUTPUT_DIR, f"{case_name}_{alg_id}_{alg_slug}.json")
-    with open(filename, "w", encoding="utf-8") as f:
+    nome_arquivo = os.path.join(PASTA_SAIDA, f"{nome_caso}_{identificador_algoritmo}_{identificador_amigavel}.json")
+    with open(nome_arquivo, "w", encoding="utf-8") as arquivo_saida:
         json.dump(
             {
-                "frontier_at_end": result["frontier_at_end"],
-                "visited_at_end":  result["visited_at_end"],
+                "fronteira_final": resultado["fronteira_final"],
+                "visitados_finais": resultado["visitados_finais"],
             },
-            f,
+            arquivo_saida,
             indent=2,
         )
-    return filename
+    return nome_arquivo
 
 
-def run_algorithm(start, alg_id, case_name):
+def executar_algoritmo(estado_inicial, identificador_algoritmo, nome_caso):
     """Executa um algoritmo, imprime resultados e salva o arquivo de saída."""
-    alg_name, heuristic = ALGORITHMS[alg_id]
-    print(f"\n  [{alg_id}] {alg_name}")
+    nome_algoritmo, heuristica = ALGORITMOS[identificador_algoritmo]
+    print(f"\n  [{identificador_algoritmo}] {nome_algoritmo}")
 
-    result = a_star(start, heuristic)
+    resultado = busca_a_estrela(estado_inicial, heuristica)
 
-    if result is None:
+    if resultado is None:
         print("      Sem solução (limite de nodos atingido).")
         return None
 
-    path_length = len(result["path"])
-    print(f"      Caminho ({path_length} passos): {' -> '.join(result['path'])}")
-    print(f"      a) Nodos visitados : {result['visited_count']}")
-    print(f"      b) Tamanho caminho : {path_length}")
-    print(f"      c) Tempo execução  : {result['time_seconds']}s")
-    print(f"      d) Maior fronteira : {result['max_frontier_size']}")
-    filename = save_output(case_name, alg_id, result)
-    print(f"      e) Arquivo gerado  : {filename}")
+    tamanho_caminho = len(resultado["caminho"])
+    print(f"      Caminho ({tamanho_caminho} passos): {' -> '.join(resultado['caminho'])}")
+    print(f"      a) Nodos visitados : {resultado['quantidade_visitados']}")
+    print(f"      b) Tamanho caminho : {tamanho_caminho}")
+    print(f"      c) Tempo execução  : {resultado['tempo_em_segundos']}s")
+    print(f"      d) Maior fronteira : {resultado['maior_tamanho_fronteira']}")
+    nome_arquivo = salvar_saida(nome_caso, identificador_algoritmo, resultado)
+    print(f"      e) Arquivo gerado  : {nome_arquivo}")
 
-    return result
+    return resultado
 
 
-def print_comparison_table(case_name, summary):
+def imprimir_tabela_comparativa(nome_caso, resumo):
     """Imprime tabela comparativa dos algoritmos executados."""
     print(f"\n  {'=' * 72}")
-    print(f"  TABELA COMPARATIVA — {case_name.upper()}")
+    print(f"  TABELA COMPARATIVA — {nome_caso.upper()}")
     print(f"  {'Algoritmo':<32} {'Visitados':>10} {'Caminho':>8} {'Tempo(s)':>11} {'MaxFront':>10}")
     print(f"  {'-' * 72}")
-    for row in summary:
+    for linha in resumo:
         print(
-            f"  {row['nome']:<32} {row['visitados']:>10} {row['caminho']:>8}"
-            f" {row['tempo']:>11.6f} {row['max_fronteira']:>10}"
+            f"  {linha['nome']:<32} {linha['visitados']:>10} {linha['caminho']:>8}"
+            f" {linha['tempo']:>11.6f} {linha['max_fronteira']:>10}"
         )
 
 
-def run_case(start, case_name, alg_ids):
+def executar_caso(estado_inicial, nome_caso, identificadores_algoritmos):
     """Executa os algoritmos selecionados para um estado inicial."""
     print(f"\n{'#' * 60}")
-    print(f"CASO: {case_name.upper()}")
+    print(f"CASO: {nome_caso.upper()}")
     print("Estado inicial:")
-    print_board(start)
+    imprimir_tabuleiro(estado_inicial)
 
-    if not is_solvable(start):
+    if not e_resolvivel(estado_inicial):
         print("  Este estado não possui solução.")
         return
 
-    summary = []
-    for alg_id in alg_ids:
-        result = run_algorithm(start, alg_id, case_name)
-        if result:
-            alg_name, _ = ALGORITHMS[alg_id]
-            summary.append({
-                "nome":         alg_name,
-                "visitados":    result["visited_count"],
-                "caminho":      len(result["path"]),
-                "tempo":        result["time_seconds"],
-                "max_fronteira": result["max_frontier_size"],
+    resumo = []
+    for identificador_algoritmo in identificadores_algoritmos:
+        resultado = executar_algoritmo(estado_inicial, identificador_algoritmo, nome_caso)
+        if resultado:
+            nome_algoritmo, _ = ALGORITMOS[identificador_algoritmo]
+            resumo.append({
+                "nome":         nome_algoritmo,
+                "visitados":    resultado["quantidade_visitados"],
+                "caminho":      len(resultado["caminho"]),
+                "tempo":        resultado["tempo_em_segundos"],
+                "max_fronteira": resultado["maior_tamanho_fronteira"],
             })
 
-    if len(summary) > 1:
-        print_comparison_table(case_name, summary)
+    if len(resumo) > 1:
+        imprimir_tabela_comparativa(nome_caso, resumo)
 
 
-def parse_args():
+def interpretar_argumentos():
     """Interpreta os argumentos da linha de comando.
 
     Retorna (start, alg_ids, case_name) ou usa o estado informado.
     """
-    args = sys.argv[1:]
+    argumentos = sys.argv[1:]
 
-    if not args:
+    if not argumentos:
         return None  # usa casos predefinidos
 
     # Primeiro argumento: tabuleiro
     try:
-        start = tuple(int(x) for x in args[0].split())
-        assert len(start) == 9 and sorted(start) == list(range(9))
+        estado_inicial = tuple(int(valor) for valor in argumentos[0].split())
+        assert len(estado_inicial) == 9 and sorted(estado_inicial) == list(range(9))
     except (ValueError, AssertionError):
         print("Erro: tabuleiro inválido.")
         print("Esperado: 9 números de 0 a 8 separados por espaço.")
@@ -195,26 +195,26 @@ def parse_args():
         sys.exit(1)
 
     # Segundo argumento opcional: número do algoritmo (1-4) ou "todos"
-    if len(args) >= 2:
-        if args[1].lower() in ("todos", "all"):
-            alg_ids = list(ALGORITHMS.keys())
-        elif args[1].isdigit() and int(args[1]) in ALGORITHMS:
-            alg_ids = [int(args[1])]
+    if len(argumentos) >= 2:
+        if argumentos[1].lower() in ("todos", "all"):
+            identificadores_algoritmos = list(ALGORITMOS.keys())
+        elif argumentos[1].isdigit() and int(argumentos[1]) in ALGORITMOS:
+            identificadores_algoritmos = [int(argumentos[1])]
         else:
-            print(f"Erro: algoritmo '{args[1]}' inválido. Escolha entre 1, 2, 3, 4 ou 'todos'.")
+            print(f"Erro: algoritmo '{argumentos[1]}' inválido. Escolha entre 1, 2, 3, 4 ou 'todos'.")
             sys.exit(1)
     else:
-        alg_ids = list(ALGORITHMS.keys())
+        identificadores_algoritmos = list(ALGORITMOS.keys())
 
-    return start, alg_ids, "custom"
+    return estado_inicial, identificadores_algoritmos, "custom"
 
 
 if __name__ == "__main__":
-    parsed = parse_args()
+    resultado_interpretacao = interpretar_argumentos()
 
-    if parsed is None:
-        for case_name, start in get_default_cases():
-            run_case(start, case_name, list(ALGORITHMS.keys()))
+    if resultado_interpretacao is None:
+        for nome_caso, estado_inicial in obter_casos_padrao():
+            executar_caso(estado_inicial, nome_caso, list(ALGORITMOS.keys()))
     else:
-        start, alg_ids, case_name = parsed
-        run_case(start, case_name, alg_ids)
+        estado_inicial, identificadores_algoritmos, nome_caso = resultado_interpretacao
+        executar_caso(estado_inicial, nome_caso, identificadores_algoritmos)

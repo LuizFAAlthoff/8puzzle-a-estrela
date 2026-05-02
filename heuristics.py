@@ -1,10 +1,10 @@
-from puzzle import GOAL
+from puzzle import ESTADO_OBJETIVO
 
-# Posição-objetivo de cada peça: tile -> (linha, coluna)
-GOAL_POS = {tile: divmod(i, 3) for i, tile in enumerate(GOAL)}
+# Posição-objetivo de cada peça: peça -> (linha, coluna)
+POSICOES_OBJETIVO = {peca: divmod(indice, 3) for indice, peca in enumerate(ESTADO_OBJETIVO)}
 
 
-def h_zero(state):
+def heuristica_nula(estado):
     """Custo Uniforme — sem heurística (h = 0).
 
     Degenera o A* em busca de custo uniforme (Dijkstra). Garante
@@ -13,44 +13,44 @@ def h_zero(state):
     return 0
 
 
-def h_inadmissivel(state):
+def heuristica_inadmissivel(estado):
     """Heurística NÃO admissível — peças fora + Manhattan.
 
     Soma duas estimativas admissíveis para forçar superestimação em
     diversos estados. Serve para comparar desempenho vs. qualidade.
     """
-    return h_pecas_fora(state) + h_manhattan(state)
+    return heuristica_pecas_fora_lugar(estado) + heuristica_manhattan(estado)
 
 
-def h_pecas_fora(state):
+def heuristica_pecas_fora_lugar(estado):
     """Heurística admissível simples — número de peças fora do lugar.
 
     Admissível porque cada peça fora de lugar precisa de ao menos
     1 movimento para chegar à posição correta. Nunca superestima.
     """
-    return sum(1 for i, t in enumerate(state) if t != 0 and t != GOAL[i])
+    return sum(1 for indice, peca in enumerate(estado) if peca != 0 and peca != ESTADO_OBJETIVO[indice])
 
 
-def h_manhattan(state):
+def heuristica_manhattan(estado):
     """Heurística admissível precisa — soma das distâncias de Manhattan.
 
     Para cada peça, calcula a distância |Δlinha| + |Δcoluna| até sua
     posição-objetivo. Admissível pois ignora colisões entre peças
     (cada peça se move de forma independente no cálculo). Domina
-    h_pecas_fora: h_manhattan(s) ≥ h_pecas_fora(s) para todo estado s.
+    heuristica_pecas_fora_lugar: heuristica_manhattan(s) ≥ heuristica_pecas_fora_lugar(s) para todo estado s.
     """
     total = 0
-    for i, tile in enumerate(state):
-        if tile != 0:
-            cr, cc = divmod(i, 3)
-            gr, gc = GOAL_POS[tile]
-            total += abs(cr - gr) + abs(cc - gc)
+    for indice, peca in enumerate(estado):
+        if peca != 0:
+            linha_atual, coluna_atual = divmod(indice, 3)
+            linha_objetivo, coluna_objetivo = POSICOES_OBJETIVO[peca]
+            total += abs(linha_atual - linha_objetivo) + abs(coluna_atual - coluna_objetivo)
     return total
 
 
-ALGORITHMS = {
-    1: ("Custo Uniforme",           h_zero),
-    2: ("A* Peças Fora do Lugar",   h_pecas_fora),
-    3: ("A* Manhattan",             h_manhattan),
-    4: ("A* Não Admissível (Soma)", h_inadmissivel),
+ALGORITMOS = {
+    1: ("Custo Uniforme",           heuristica_nula),
+    2: ("A* Peças Fora do Lugar",   heuristica_pecas_fora_lugar),
+    3: ("A* Manhattan",             heuristica_manhattan),
+    4: ("A* Não Admissível (Soma)", heuristica_inadmissivel),
 }
