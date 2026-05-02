@@ -5,10 +5,10 @@ Uso
   # Roda todos os algoritmos em um estado e exibe tabela comparativa:
   python main.py "7 2 4 5 0 6 8 3 1"
 
-  # Roda apenas um algoritmo específico (1-4):
+    # Roda apenas um algoritmo específico (1-4):
   python main.py "7 2 4 5 0 6 8 3 1" 4
 
-    # Roda um caso aleatório solucionável:
+    # Roda os 7 casos padrão (2 fáceis, 2 médios, 2 difíceis e 1 aleatório):
   python main.py
 
 Algoritmos disponíveis
@@ -31,6 +31,51 @@ from puzzle import is_solvable, print_board
 from search import a_star
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
+GOAL_STATE = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+
+
+def apply_moves(start, moves):
+    """Aplica uma sequência de movimentos ao tabuleiro informado."""
+    state = list(start)
+    for move in moves:
+        blank_index = state.index(0)
+        row, col = divmod(blank_index, 3)
+
+        if move == "left" and col > 0:
+            swap_index = blank_index - 1
+        elif move == "right" and col < 2:
+            swap_index = blank_index + 1
+        elif move == "up" and row > 0:
+            swap_index = blank_index - 3
+        elif move == "down" and row < 2:
+            swap_index = blank_index + 3
+        else:
+            raise ValueError(f"Movimento inválido '{move}' para o estado {tuple(state)}")
+
+        state[blank_index], state[swap_index] = state[swap_index], state[blank_index]
+
+    return tuple(state)
+
+
+def generate_scrambled_start(moves):
+    """Gera um estado solucionável a partir do estado objetivo."""
+    return apply_moves(GOAL_STATE, moves)
+
+
+def get_default_cases():
+    """Retorna os 7 casos padrão usados quando o programa é executado sem argumentos.
+
+    A dificuldade é aproximada pela profundidade do embaralhamento a partir do estado objetivo.
+    """
+    return [
+        ("facil_1", generate_scrambled_start(["left", "up", "left"])),
+        ("facil_2", generate_scrambled_start(["up", "left", "down", "right"])),
+        ("medio_1", generate_scrambled_start(["left", "up", "left", "down", "right", "up"])),
+        ("medio_2", generate_scrambled_start(["up", "left", "down", "left", "up", "right"])),
+        ("dificil_1", generate_scrambled_start(["left", "up", "left", "down", "right", "up", "left", "down", "right", "up"])),
+        ("dificil_2", generate_scrambled_start(["up", "left", "down", "left", "up", "right", "down", "left", "up", "right", "down", "left"])),
+        ("aleatorio", generate_random_start()),
+    ]
 
 
 def generate_random_start():
@@ -168,8 +213,8 @@ if __name__ == "__main__":
     parsed = parse_args()
 
     if parsed is None:
-        start = generate_random_start()
-        run_case(start, "aleatorio", list(ALGORITHMS.keys()))
+        for case_name, start in get_default_cases():
+            run_case(start, case_name, list(ALGORITHMS.keys()))
     else:
         start, alg_ids, case_name = parsed
         run_case(start, case_name, alg_ids)

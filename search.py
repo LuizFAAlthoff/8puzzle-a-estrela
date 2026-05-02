@@ -1,5 +1,4 @@
 import time
-from bisect import insort
 
 from puzzle import GOAL, get_neighbors
 
@@ -13,6 +12,22 @@ def _reconstruct_path(parent, goal):
         cur = par
     path.reverse()
     return path
+
+
+def _insert_sorted(frontier, item):
+    """Insere item mantendo a lista frontier ordenada pelo f-value (primeiro elemento).
+    
+    Usa busca binária para encontrar a posição correta e insere o elemento,
+    mantendo a ordem de prioridade da fila.
+    """
+    left, right = 0, len(frontier)
+    while left < right:
+        mid = (left + right) // 2
+        if frontier[mid] < item:
+            left = mid + 1
+        else:
+            right = mid
+    frontier.insert(left, item)
 
 
 def a_star(start, heuristic, max_nodes=500_000):
@@ -90,5 +105,5 @@ def a_star(start, heuristic, max_nodes=500_000):
                 g_costs[neighbor] = new_g
                 parent[neighbor] = (state, move)
                 counter += 1
-                insort(frontier, (new_g + heuristic(neighbor), new_g, counter, neighbor))
+                _insert_sorted(frontier, (new_g + heuristic(neighbor), new_g, counter, neighbor))
                 max_frontier_size = max(max_frontier_size, len(frontier))

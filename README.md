@@ -15,6 +15,9 @@ busca. A saída principal do programa **é o menor caminho**
 chegar ao tabuleiro ordenado3. Além do caminho, ao final, deve ser
 exibido:
 
+Ao executar `python main.py` sem argumentos, o programa roda 7 casos
+padrão: 2 fáceis, 2 médios, 2 difíceis e 1 aleatório.
+
 > a\) O total de nodos visitados 
 >
 > b\) O tamanho do caminho
