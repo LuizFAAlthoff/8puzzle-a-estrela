@@ -61,8 +61,6 @@ def gerar_estado_aleatorio():
 
 def salvar_saida(nome_caso, identificador_algoritmo, resultado):
     os.makedirs(PASTA_SAIDA, exist_ok=True)
-
-    # Normaliza e remove caracteres inválidos para nomes de arquivo no Windows.
     nome_algoritmo = ALGORITMOS[identificador_algoritmo][0].lower().replace("×", "x")
     nome_algoritmo = unicodedata.normalize("NFKD", nome_algoritmo).encode("ascii", "ignore").decode("ascii")
     identificador_amigavel = re.sub(r"[^a-z0-9]+", "_", nome_algoritmo).strip("_")
@@ -146,8 +144,6 @@ def interpretar_argumentos():
 
     if not argumentos:
         return None  # usa casos predefinidos
-
-    # Primeiro argumento: tabuleiro
     try:
         estado_inicial = tuple(int(valor) for valor in argumentos[0].split())
         assert len(estado_inicial) == 9 and sorted(estado_inicial) == list(range(9))
@@ -157,7 +153,6 @@ def interpretar_argumentos():
         print('Exemplo:  python main.py "7 2 4 5 0 6 8 3 1"')
         sys.exit(1)
 
-    # Segundo argumento opcional: número do algoritmo (1-4) ou "todos"
     if len(argumentos) >= 2:
         if argumentos[1].lower() in ("todos", "all"):
             identificadores_algoritmos = list(ALGORITMOS.keys())
