@@ -48,7 +48,7 @@
 
 **O que eu posso falar sobre a estrutura da fronteira:**
 
-“No A*, eu mantenho a fronteira como uma lista ordenada de tuplas no formato `(f, g, contador, estado)`. O `f` é a soma do custo acumulado com a heurística, o `g` é o custo real até aquele estado, o `contador` serve para desempatar entradas com o mesmo valor de `f`, e o `estado` é o tabuleiro em si.”
+"No A*, eu mantenho a fronteira como uma lista ordenada de tuplas no formato `(f, g, estado)`. O `f` é a soma do custo acumulado com a heurística, o `g` é o custo real até aquele estado, e o `estado` é o tabuleiro em si."
 
 “Essa estrutura permite que eu sempre expanda primeiro o estado com menor custo estimado total.”
 
@@ -70,7 +70,51 @@
 
 ---
 
-## 4º - As 4 Heurísticas (~ 3 min)
+## 4º - Organização do `main.py` (~ 1.5 min)
+
+### **Arquivo: `main.py`**
+
+**O que eu posso falar sobre `aplicar_movimentos(estado_inicial, movimentos)`:**
+
+"Essa função serve para montar estados de teste a partir de uma sequência de movimentos. Ela começa do estado objetivo e vai aplicando os deslocamentos válidos do espaço em branco, o que facilita criar casos reproduzíveis."
+
+"Na prática, ela é a base para gerar exemplos fáceis, médios e difíceis de forma controlada."
+
+**O que eu posso falar sobre `gerar_estado_embaralhado(movimentos)`:**
+
+"Essa função usa `aplicar_movimentos()` para transformar o estado objetivo em um novo estado embaralhado, mas ainda solucionável. Assim eu consigo produzir casos que realmente têm solução garantida."
+
+**O que eu posso falar sobre `gerar_estado_aleatorio()`:**
+
+"Aqui eu gero um estado aleatório e só aceito se ele for solucionável. Isso evita casos inválidos e me dá um exemplo extra para comparar o comportamento dos algoritmos em uma situação menos previsível."
+
+**O que eu posso falar sobre `obter_casos_padrao()`:**
+
+"Essa função define os casos executados quando o programa roda sem argumentos. Ela organiza dois casos fáceis, dois médios, dois difíceis e um aleatório, o que deixa a apresentação mais equilibrada para comparação."
+
+**O que eu posso falar sobre `salvar_saida(nome_caso, identificador_algoritmo, resultado)`:**
+
+"Depois de resolver um caso, eu salvo a fronteira final e os visitados em arquivos JSON dentro da pasta `output/`. Isso permite inspecionar os resultados depois da execução e também comprovar o comportamento de cada algoritmo."
+
+**O que eu posso falar sobre `executar_algoritmo(...)`:**
+
+"Essa função faz a ponte entre o menu principal e a busca A*. Ela seleciona a heurística correta, executa o algoritmo, imprime o caminho encontrado e mostra as métricas principais de desempenho."
+
+**O que eu posso falar sobre `executar_caso(...)`:**
+
+"Essa função roda todos os algoritmos para um mesmo estado inicial e depois monta a comparação lado a lado. É ela que viabiliza a tabela comparativa que eu mostro na apresentação."
+
+**O que eu posso falar sobre `interpretar_argumentos()`:**
+
+"Essa função cuida da interface de linha de comando. Ela lê o tabuleiro informado pelo usuário, valida a entrada e também permite escolher um algoritmo específico ou rodar todos."
+
+**O que eu posso falar sobre `imprimir_tabela_comparativa(...)`:**
+
+"No final, eu uso essa tabela para resumir os resultados de forma visual e direta, mostrando visitados, tamanho do caminho, tempo e maior fronteira."
+
+---
+
+## 5º - As 4 Heurísticas (~ 3 min)
 
 ### **Arquivo: `heuristics.py`**
 
@@ -106,7 +150,7 @@
 
 ---
 
-## 5º - Execução e Resultados (~ 2 min)
+## 6º - Execução e Resultados (~ 2 min)
 
 ### **Terminal: rodar o programa**
 
@@ -140,7 +184,7 @@
 
 ---
 
-## 6º - Análise de Desempenho e Conclusões (~ 0.5 min)
+## 7º - Análise de Desempenho e Conclusões (~ 0.5 min)
 
 **O que eu posso falar no fechamento:**
 
