@@ -134,7 +134,6 @@ def executar_algoritmo(estado_inicial, identificador_algoritmo, nome_caso):
 
 
 def imprimir_tabela_comparativa(nome_caso, resumo):
-    """Imprime tabela comparativa dos algoritmos executados."""
     print(f"\n  {'=' * 72}")
     print(f"  TABELA COMPARATIVA — {nome_caso.upper()}")
     print(f"  {'Algoritmo':<32} {'Visitados':>10} {'Caminho':>8} {'Tempo(s)':>11} {'MaxFront':>10}")
@@ -147,7 +146,6 @@ def imprimir_tabela_comparativa(nome_caso, resumo):
 
 
 def executar_caso(estado_inicial, nome_caso, identificadores_algoritmos):
-    """Executa os algoritmos selecionados para um estado inicial."""
     print(f"\n{'#' * 60}")
     print(f"CASO: {nome_caso.upper()}")
     print("Estado inicial:")
@@ -175,10 +173,6 @@ def executar_caso(estado_inicial, nome_caso, identificadores_algoritmos):
 
 
 def interpretar_argumentos():
-    """Interpreta os argumentos da linha de comando.
-
-    Retorna (start, alg_ids, case_name) ou usa o estado informado.
-    """
     argumentos = sys.argv[1:]
 
     if not argumentos:

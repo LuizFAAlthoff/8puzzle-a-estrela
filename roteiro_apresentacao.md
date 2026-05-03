@@ -8,171 +8,148 @@
 
 ## 1º - Introdução e Estrutura (~ 1 min)
 
-**Objetivo:** Apresentar o projeto e a organização dos arquivos
+**Objetivo:** apresentar o projeto e situar o que foi implementado.
 
-- Breve contexto: 8-puzzle é um clássico da IA para demonstrar buscas informadas
-- Mostrar os 4 arquivos principais:
-  - `puzzle.py` — Lógica do tabuleiro e validação
-  - `heuristics.py` — As 4 heurísticas (Uniforme, Peças Fora, Manhattan, Não-admissível)
-  - `search.py` — Implementação do algoritmo A*
-  - `main.py` — Interface que roda os 7 casos padrão
+**O que eu posso falar:**
+
+“Neste trabalho eu implementei a busca A* para resolver o problema do 8-puzzle. A ideia é começar com um tabuleiro embaralhado e encontrar a sequência mínima de movimentos para chegar ao estado objetivo. Esse problema é interessante porque permite comparar uma busca sem heurística, como custo uniforme, com buscas informadas usando heurísticas diferentes.”
+
+“A organização do projeto ficou separada em quatro arquivos principais. No `puzzle.py` eu deixei a lógica do tabuleiro e a verificação de solucionabilidade. No `heuristics.py` estão as heurísticas usadas pelo A*. No `search.py` está a implementação da busca em si. E no `main.py` está a parte que executa os casos, mostra os resultados e salva os arquivos de saída.”
+
+“Na execução padrão, o programa roda casos fáceis, médios, difíceis e um aleatório, então eu consigo comparar o comportamento dos algoritmos em diferentes níveis de dificuldade.”
 
 ---
 
 ## 2º - Funções Principais e Relação com A* (~ 1.5 min)
 
-### **Arquivo: puzzle.py**
+### **Arquivo: `puzzle.py`**
 
-**Mostrar no código:**
+**O que eu posso falar sobre `e_resolvivel(estado)`:**
 
-1. **`is_solvable(state)`** (linhas 5-16)
-   - Propriedade matemática: um 8-puzzle só é resolvível se tiver número **par de inversões**
-   - Conta inversões na sequência linear (ignorando o espaço em branco)
-   - Filtra ~50% dos estados de entrada inválidos antes de iniciar busca
-   - Exemplo: Se uma configuração tiver 3 inversões (ímpar) → não tem solução
+“Antes de iniciar a busca, eu verifico se o estado inicial tem solução. Para o 8-puzzle com um objetivo fixo, isso depende da quantidade de inversões. Se o número de inversões for par, o estado é resolvível; se for ímpar, não tem solução. Essa checagem evita gastar tempo tentando resolver configurações impossíveis.”
 
-2. **`get_neighbors(state)`** (linhas 19-40)
-   - Retorna os vizinhos válidos de um estado (máximo 4 movimentos: cima, baixo, esquerda, direita)
-   - Valida limites da matriz 3×3
-   - Retorna tuplas `(novo_estado, movimento)`
-   - **Crucial no A*:** esta função é chamada dentro do loop de expansão
+“Na prática, isso filtra uma parte grande dos estados de entrada e deixa o algoritmo mais eficiente logo no início.”
 
-3. **`print_board(state)`** (linhas 43-48)
-   - Apenas formatação visual (não afeta algoritmo)
+**O que eu posso falar sobre `obter_vizinhos(estado)`:**
+
+“Essa função é uma das mais importantes da implementação, porque ela gera os próximos estados possíveis a partir do estado atual. Ela localiza o espaço em branco, calcula os movimentos válidos dentro dos limites do tabuleiro e retorna os vizinhos junto com o movimento realizado.”
+
+“No A*, essa função é chamada toda vez que um estado é expandido. Então ela é diretamente responsável por gerar a fronteira de novos estados.”
+
+**O que eu posso falar sobre `imprimir_tabuleiro(estado)`:**
+
+“Essa função é só para visualização. Ela formata o tabuleiro para ficar legível no terminal, mas não interfere na lógica da busca.”
 
 ---
 
 ## 3º - Gerenciamento da Fronteira no A* (~ 2 min)
 
-### **Arquivo: search.py**
+### **Arquivo: `search.py`**
 
-**Mostrar estrutura da fronteira (linhas 11-25):**
-```
-Fronteira = Lista ordenada com entradas: (f, g, counter, state)
-  f       = g + h   → custo estimado total
-  g       = custo real acumulado
-  counter = desempate (evita comparar tuplas grandes)
-  state   = tupla do tabuleiro (9 inteiros)
-```
+**O que eu posso falar sobre a estrutura da fronteira:**
 
-**Mostrar verificações antes de enfileirar (linhas 77-87):**
+“No A*, eu mantenho a fronteira como uma lista ordenada de tuplas no formato `(f, g, contador, estado)`. O `f` é a soma do custo acumulado com a heurística, o `g` é o custo real até aquele estado, o `contador` serve para desempatar entradas com o mesmo valor de `f`, e o `estado` é o tabuleiro em si.”
 
-1. **Se vizinho está em `closed` → DESCARTAR**
-   - Conjunto `closed` contém estados já expandidos com custo ótimo
-   - Evita revisitar nodos desnecessariamente
+“Essa estrutura permite que eu sempre expanda primeiro o estado com menor custo estimado total.”
 
-2. **Se já existe `g_costs[vizinho] ≤ novo_g` → DESCARTAR**
-   - Já temos caminho mais barato (ou igual) conhecido para este estado
-   - Usa dicionário `g_costs` para rastrear custos reais
-   - Só enfileira se encontrar caminho mais barato
+**O que eu posso falar sobre as verificações antes de enfileirar um vizinho:**
 
-3. **Se `vizinho` já na fronteira com custo melhor → ATUALIZAR**
-   - A função `insort()` mantém a lista ordenada por `f` automaticamente
-   - Garante nodos com menor f-value são expandidos primeiro (propriedade do A*)
+“Antes de adicionar um vizinho na fronteira, eu faço duas verificações principais. Primeiro, se o estado já está no conjunto de fechados, eu descarto, porque ele já foi expandido com o melhor custo conhecido.”
 
-**Mostrar rastreamento (linhas 54-55, 73):**
-- `visited_count`: conta quantos nodos foram expandidos (forem do `closed`)
-- `max_frontier_size`: rastreia o maior tamanho da fronteira durante execução
+“Depois, eu verifico se já existe um custo `g` menor ou igual registrado para esse mesmo estado. Se existir, eu também descarto, porque já há um caminho melhor ou equivalente conhecido.”
+
+“Se o novo caminho for melhor, eu atualizo o custo, guardo o predecessor e insiro o estado de forma ordenada na fronteira.”
+
+**O que eu posso falar sobre `inserir_ordenado()`:**
+
+“Em vez de usar uma função pronta de biblioteca externa, eu implementei uma inserção ordenada própria com busca binária. Assim eu mantenho a lista organizada por prioridade e consigo controlar melhor a lógica do algoritmo.”
+
+**O que eu posso falar sobre os contadores de execução:**
+
+“Durante a busca, eu também registro quantos estados foram visitados e qual foi o maior tamanho atingido pela fronteira. Essas métricas são importantes para comparar o desempenho entre as heurísticas.”
 
 ---
 
 ## 4º - As 4 Heurísticas (~ 3 min)
 
-### **Arquivo: heuristics.py**
+### **Arquivo: `heuristics.py`**
 
-**Mostrar cada heurística no código:**
+**O que eu posso falar sobre `heuristica_nula()`:**
 
-#### **1. h_zero() — Custo Uniforme**
-```python
-Retorna sempre 0 → A* degrada em Dijkstra (custo uniforme)
-```
-- Sem heurística = garante solução ótima, mas explora muitos nodos
-- Baseline para comparação
+“Essa é a heurística usada para representar custo uniforme. Ela sempre retorna zero, então o A* vira praticamente uma busca de custo uniforme, sem nenhuma informação adicional do objetivo.”
 
-#### **2. h_pecas_fora() — Admissível Simples** (linhas 36-39)
-- Conta quantas peças estão fora do lugar
-- **Admissível:** cada peça precisa de ≥1 movimento → nunca superestima
-- Rápida de calcular (um loop)
-- Menos precisa que Manhattan
+“Ela é útil como linha de base, porque garante solução ótima, mas normalmente expande muito mais estados.”
 
-#### **3. h_manhattan() — Admissível Precisa** (linhas 42-54)
-```
-Para cada peça: distância = |linha_atual - linha_goal| + |coluna_atual - coluna_goal|
-```
-- **Admissível:** ignora colisões entre peças (subestima)
-- **Domina h_pecas_fora:** Manhattan(s) ≥ Peças_Fora(s) para todo estado s
-- Mais precisa → menos nodos expandidos
-- Exemplo: peça 8 em posição (2,0) e goal em (2,2) → distância = 2
+**O que eu posso falar sobre `heuristica_pecas_fora_lugar()`:**
 
-#### **4. h_inadmissivel() — Não-Admissível (Soma)** (linhas 28-32)
-```
-h = h_pecas_fora(state) + h_manhattan(state)
-```
-- Soma duas heurísticas admissíveis → resulta em superestimação
-- **NÃO admissível:** pode superestimar verdadeiro custo
-- Expande menos nodos que Manhattan, mas solução pode não ser ótima
-- Compara trade-off: velocidade vs. otimalidade
+“Essa heurística conta quantas peças estão fora da posição correta. Ela é admissível porque cada peça fora do lugar precisa de pelo menos um movimento para chegar à posição certa, então ela nunca superestima o custo real.”
 
-**Comparação visual (indicar na tela):**
-```
-Manhattan domina Peças_Fora domina Custo_Uniforme
-```
+“Ela é simples e rápida de calcular, mas menos precisa do que a Manhattan.”
+
+**O que eu posso falar sobre `heuristica_manhattan()`:**
+
+“A heurística Manhattan soma, para cada peça, a distância horizontal e vertical até a posição objetivo. Em outras palavras, ela calcula quantos passos cada peça ainda precisa percorrer, ignorando colisões com outras peças.”
+
+“Ela também é admissível, porque tende a subestimar o custo real. Entre as heurísticas admissíveis que eu implementei, ela é a mais precisa, então costuma expandir menos estados.”
+
+“Se eu quiser dar um exemplo rápido, a peça 8, por exemplo, se estiver em uma posição distante duas colunas do objetivo, a distância Manhattan dela é 2.”
+
+**O que eu posso falar sobre `heuristica_inadmissivel()`:**
+
+“Essa heurística soma a quantidade de peças fora do lugar com a distância Manhattan. Como estou combinando duas estimativas, ela pode superestimar o custo real, então ela não é admissível.”
+
+“A vantagem é que ela pode reduzir ainda mais a quantidade de estados visitados, mas em troca perde a garantia de otimalidade da solução.”
+
+**Fechamento dessa parte:**
+
+“Na comparação geral, a Manhattan é mais informativa do que peças fora do lugar, e as duas são melhores do que custo uniforme em termos de eficiência.”
 
 ---
 
 ## 5º - Execução e Resultados (~ 2 min)
 
-### **Terminal: Rodar o programa**
+### **Terminal: rodar o programa**
+
+“Agora eu vou executar o programa para mostrar os resultados práticos.”
+
 ```powershell
 &"c:\Users\Luiz Fernando\8puzzle-a-estrela\.venv\Scripts\python.exe" "c:\Users\Luiz Fernando\8puzzle-a-estrela\main.py"
 ```
 
-**Mostrar saída para pelo menos:**
+**O que eu posso falar ao mostrar o caso fácil:**
 
-**Caso FÁCIL (ex: FACIL_1):**
-```
-Algoritmo                         Visitados  Caminho    Tempo(s)   MaxFront
-─────────────────────────────────────────────────────────────────────────
-Custo Uniforme                           17        3    0.000104         14
-A* Peças Fora do Lugar                    4        3    0.000038          6
-A* Manhattan                              4        3    0.000047          6
-A* Não Admissível (Soma)                  4        3    0.000062          6
-```
+“No caso fácil, dá para ver que todas as buscas encontram a mesma solução, mas o custo uniforme visita muito mais estados. Já as versões com heurística chegam à solução com bem menos expansões.”
 
-**Análise do FÁCIL:**
-- A* reduz visitados de 17 (uniforme) para 4 (heurísticas)
-- Todos encontram solução ótima (tamanho = 3)
-- Heurísticas dominam completamente
+“Isso mostra que a heurística realmente orienta melhor a busca.”
 
-**Caso MÉDIO (ex: MEDIO_1):**
-- Mostrar ganho ainda mais significativo
-- Mencionar ordem de precisão: Manhattan ≤ Peças_Fora ≤ Uniforme em nodos visitados
+**O que eu posso falar ao mostrar o caso médio:**
 
-**Caso DIFÍCIL (ex: DIFICIL_1):**
-- Mostrar diferença ainda mais acentuada
-- A* com Manhattan é essencial para viabilidade
+“No caso médio, a diferença fica mais clara. A Manhattan costuma visitar menos nós do que peças fora do lugar, porque ela fornece uma estimativa mais precisa da distância até o objetivo.”
 
-### **Tabela Comparativa Geral (Mínimo solicitado):**
-- ✅ 1 fácil (FACIL_1 ou FACIL_2)
-- ✅ 1 médio (MEDIO_1 ou MEDIO_2)  
-- ✅ 1 difícil (DIFICIL_1 ou DIFICIL_2)
-- ✅ Todos os 4 algoritmos para cada caso
+“Aqui também dá para ver melhor a relação entre precisão da heurística e eficiência da busca.”
+
+**O que eu posso falar ao mostrar o caso difícil:**
+
+“No caso difícil, a vantagem da busca informada fica ainda mais evidente. Se eu usasse só custo uniforme, a quantidade de estados explorados seria muito maior. Com a heurística Manhattan, a busca continua viável.”
+
+**Como eu posso resumir a tabela comparativa:**
+
+“A tabela comparativa junta os números de estados visitados, tamanho do caminho, tempo de execução e maior fronteira. Com isso eu consigo mostrar o impacto das heurísticas de forma objetiva.”
+
+“A ideia principal é que, para o 8-puzzle, uma heurística mais precisa normalmente reduz bastante o custo de busca.”
 
 ---
 
 ## 6º - Análise de Desempenho e Conclusões (~ 0.5 min)
 
-**Destacar no vídeo:**
+**O que eu posso falar no fechamento:**
 
-| Métrica | Custo Uniforme | Peças Fora | Manhattan | Não-Admissível |
-|---------|---|---|---|---|
-| **Admissível?** | ✅ Sim | ✅ Sim | ✅ Sim | ❌ Não |
-| **Precisão** | 0 | Baixa | Alta | Alta |
-| **Nodos Visitados** | Mais | Menos | Menos | Menos |
-| **Otimalidade** | ✅ Ótimo | ✅ Ótimo | ✅ Ótimo | ❌ Pode não ser |
-| **Uso Prático** | Não | Básico | ✅ Recomendado | Experimentos |
+“Com base nos testes, a heurística Manhattan foi a melhor opção entre as admissíveis, porque consegue equilibrar otimalidade e eficiência. A heurística de peças fora do lugar também funciona bem, mas é menos informativa.”
 
-**Conclusão:**
-- Manhattan é a melhor opção para este problema (admissível + precisa)
-- A* com Manhattan é ~4-10x mais eficiente que Custo Uniforme
-- Heurística não-admissível é mais rápida mas não garante otimalidade 
+“O custo uniforme garante solução ótima, mas é o menos eficiente. Já a heurística não admissível pode ser ainda mais agressiva na redução de estados, mas sem garantir que a solução encontrada seja a menor possível.”
+
+“Então, no meu trabalho, a conclusão é que o A* com Manhattan foi a abordagem mais adequada para resolver o 8-puzzle de forma correta e eficiente.”
+
+**Se quiser encerrar com uma frase curta:**
+
+“Em resumo, o trabalho mostra bem a diferença entre busca sem heurística e busca informada, e como a escolha da heurística afeta diretamente o desempenho do algoritmo.”
