@@ -1,24 +1,3 @@
-"""8-Puzzle — Busca A* (Trabalho Prático 1 — Sistemas Inteligentes)
-
-Uso
----
-  # Roda todos os algoritmos em um estado e exibe tabela comparativa:
-  python main.py "7 2 4 5 0 6 8 3 1"
-
-    # Roda apenas um algoritmo específico (1-4):
-  python main.py "7 2 4 5 0 6 8 3 1" 4
-
-    # Roda os 7 casos padrão (2 fáceis, 2 médios, 2 difíceis e 1 aleatório):
-  python main.py
-
-Algoritmos disponíveis
-----------------------
-  1 — Custo Uniforme (sem heurística)
-    2 — A* com heurística admissível simples (peças fora do lugar)
-    3 — A* com heurística admissível precisa (distância Manhattan)
-    4 — A* com heurística não admissível (peças fora + Manhattan)
-"""
-
 import json
 import os
 import random
@@ -35,7 +14,6 @@ ESTADO_OBJETIVO = (1, 2, 3, 4, 5, 6, 7, 8, 0)
 
 
 def aplicar_movimentos(estado_inicial, movimentos):
-    """Aplica uma sequência de movimentos ao tabuleiro informado."""
     estado = list(estado_inicial)
     for movimento in movimentos:
         indice_do_espaco = estado.index(0)
@@ -58,28 +36,21 @@ def aplicar_movimentos(estado_inicial, movimentos):
 
 
 def gerar_estado_embaralhado(movimentos):
-    """Gera um estado solucionável a partir do estado objetivo."""
     return aplicar_movimentos(ESTADO_OBJETIVO, movimentos)
 
 
 def obter_casos_padrao():
-    """Retorna os 7 casos padrão usados quando o programa é executado sem argumentos.
-
-    A dificuldade é aproximada pela profundidade do embaralhamento a partir do estado objetivo.
-    """
     return [
         ("facil_1", gerar_estado_embaralhado(["left", "up", "left"])),
         ("facil_2", gerar_estado_embaralhado(["up", "left", "down", "right"])),
         ("medio_1", gerar_estado_embaralhado(["left", "up", "left", "down", "right", "up"])),
         ("medio_2", gerar_estado_embaralhado(["up", "left", "down", "left", "up", "right"])),
-        ("dificil_1", gerar_estado_embaralhado(["left", "up", "left", "down", "right", "up", "left", "down", "right", "up"])),
-        ("dificil_2", gerar_estado_embaralhado(["up", "left", "down", "left", "up", "right", "down", "left", "up", "right", "down", "left"])),
-        ("aleatorio", gerar_estado_aleatorio()),
+        ("dificil_1", gerar_estado_aleatorio()),
+        ("dificil_2", gerar_estado_aleatorio())
     ]
 
 
 def gerar_estado_aleatorio():
-    """Gera um estado inicial aleatório e solucionável do 8-puzzle."""
     while True:
         estado = list(range(9))
         random.shuffle(estado)
@@ -89,7 +60,6 @@ def gerar_estado_aleatorio():
 
 
 def salvar_saida(nome_caso, identificador_algoritmo, resultado):
-    """Salva fronteira e visitados em arquivo JSON na pasta output/."""
     os.makedirs(PASTA_SAIDA, exist_ok=True)
 
     # Normaliza e remove caracteres inválidos para nomes de arquivo no Windows.
@@ -111,7 +81,6 @@ def salvar_saida(nome_caso, identificador_algoritmo, resultado):
 
 
 def executar_algoritmo(estado_inicial, identificador_algoritmo, nome_caso):
-    """Executa um algoritmo, imprime resultados e salva o arquivo de saída."""
     nome_algoritmo, heuristica = ALGORITMOS[identificador_algoritmo]
     print(f"\n  [{identificador_algoritmo}] {nome_algoritmo}")
 
